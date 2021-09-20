@@ -46,10 +46,11 @@ module ApplicationRecordLogger
         log_destroy: true,
         log_fields: default_logging_fields,
         log_create_data: false,
+        log_user_activity_only: true,
       }
     end
 
-    %i(log_create log_update log_destroy log_fields log_create_data).each do |key|
+    %i(log_create log_update log_destroy log_fields log_create_data log_user_activity_only).each do |key|
       define_method(key) do
         logging_options[key]
       end
@@ -60,6 +61,26 @@ module ApplicationRecordLogger
 
   def logging_data
     saved_changes.slice(*self.class.log_fields)
+  end
+
+  def user_and_log_user_only?
+    if self.class.log_user_activity_only
+      current_user && current_user.id
+    else
+      true
+    end
+  end
+
+  def log_create?
+    self.class.log_create && user_and_log_user_only?
+  end
+
+  def log_update?
+    self.class.log_update && user_and_log_user_only?
+  end
+
+  def log_destroy?
+    self.class.log_destroy && user_and_log_user_only?
   end
 
   private
