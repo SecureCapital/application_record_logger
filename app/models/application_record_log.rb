@@ -1,9 +1,11 @@
 class ApplicationRecordLog < ApplicationRecord
   # self.table_name = 'application_record_logs'
+  # Skip callbacks on application_record_log itself - we will not add a log to a log
   skip_callback :after_create
   skip_callback :after_update
   skip_callback :after_destroy
 
+  # Same as above
   def self.log_create
     false
   end
@@ -25,6 +27,7 @@ class ApplicationRecordLog < ApplicationRecord
     :db_destroy => 2,
   }
 
+  # Main logging method
   def self.log(record:, user:, action:)
     if record && (record.saved_changes? || record.destroyed?)
       user_id = user.respond_to?(:id) ? user.id : user
@@ -46,6 +49,8 @@ class ApplicationRecordLog < ApplicationRecord
     end
   end
 
+  # This method allows us to 'roll back' a given instance to the given point in time or a given setp back
+  # Ie give us the copy of what the record looked like at that point in time or for example 5 modifications (steps) back
   def self.rollback(owner:, owner_type:, owner_id:, timepoint:, step:)
     klass       = owner_type.constantize
     given_owner = owner

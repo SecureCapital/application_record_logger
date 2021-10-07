@@ -2,6 +2,8 @@ require "application_record_logger/engine"
 require "application_record_logger/version"
 
 module ApplicationRecordLogger
+  # This config option is implemented as a class method, to allow for individuel configuration of models. 
+  # 
   def self.config
     @@config ||= {
       log_field_types: %i(string date integer decimal float datetime),
@@ -9,9 +11,17 @@ module ApplicationRecordLogger
     }
   end
 
+  # Included is automatically executed when including a module. Base is the model implementing the module
   def self.included(base)
+    
+    # Add all methods on module ClassMethods in this module as class methods
     base.extend ClassMethods
+    
+    # Here we add callbacks for individual methods on the base class (the model). Only if the configuration for the class allows for it.
+    # We can add the methods for log_create, log_update and log_destroy on the base class to prevent these from being added  
     base.class_eval do
+      
+      # Add relation to logs
       has_many :application_record_logs, as: :owner
 
       after_create do
@@ -29,6 +39,8 @@ module ApplicationRecordLogger
   end
 
   module ClassMethods
+    # This is added as a Class method and sets default logging fields (all fields of the types set in @@config and excluding all fields in @@config.exclude_names)
+    # Used if the model itself hasnt defined log_fields
     def default_logging_fields
       @@default_logging_fields ||= columns_hash.map do |key,rec|
         [key, rec.type]
@@ -39,6 +51,7 @@ module ApplicationRecordLogger
       end.map(&:first)
     end
 
+    # A list of methods that will be added to the base class
     def logging_options
       {
         log_create: true,
@@ -59,10 +72,12 @@ module ApplicationRecordLogger
 
   attr_accessor :current_user
 
+  # This will only include the fields defined for loggin on the model
   def logging_data
     saved_changes.slice(*self.class.log_fields)
   end
 
+  # This will check if the model only should create log if a user is given
   def user_and_log_user_only?
     if self.class.log_user_activity_only
       current_user && current_user.id
