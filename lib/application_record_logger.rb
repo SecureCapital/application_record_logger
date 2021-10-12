@@ -42,7 +42,7 @@ module ApplicationRecordLogger
     # This is added as a Class method and sets default logging fields (all fields of the types set in @@config and excluding all fields in @@config.exclude_names)
     # Used if the model itself hasnt defined log_fields
     def default_logging_fields
-      @@default_logging_fields ||= columns_hash.map do |key,rec|
+      @default_logging_fields ||= columns_hash.map do |key,rec|
         [key, rec.type]
       end.select do |key,type|
         ApplicationRecordLogger.config[:log_field_types].include?(type)
@@ -91,7 +91,7 @@ module ApplicationRecordLogger
   end
 
   def log_update?
-    self.class.log_update && user_and_log_user_only?
+    self.class.log_update && user_and_log_user_only? && this.logging_data.any?
   end
 
   def log_destroy?
