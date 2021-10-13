@@ -20,3 +20,6 @@ puts "Created #{User.count} users"
 invoices = YAML.load_file(FIXTURES_FOLDER+'invoices.yml').values
 Invoice.create(invoices)
 puts "Created #{Invoice.count} invoices"
+
+puts "\n"
+puts "Found #{ApplicationRecordLog.count}, application_Record_logs"
