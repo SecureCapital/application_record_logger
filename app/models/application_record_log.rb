@@ -16,7 +16,7 @@ class ApplicationRecordLog < ApplicationRecord
     false
   end
 
-  belongs_to :owner, polymorphic: true, optional: false
+  belongs_to :record, polymorphic: true, optional: false
   belongs_to :user, optional: true
   serialize :data
   enum :action => {
@@ -25,55 +25,36 @@ class ApplicationRecordLog < ApplicationRecord
     :db_destroy => 2,
   }
 
-  def self.log(record:, user:, action:)
-    if record && (record.saved_changes? || record.destroyed?)
-      user_id = user.respond_to?(:id) ? user.id : user
-      if action == :db_create
-        data = (record.class.log_create_data ||  where(owner: record, action: :db_create).any?) ? record.logging_data : nil
-      elsif action == :db_destroy
-        data = record.attributes.map do |key, value|
-          [key, [value, nil]]
-        end.to_h.slice(*record.class.log_fields)
+  class << self
+    def rollback(record:, record_type:, record_id:, timepoint:, step:)
+      klass       = record_type.constantize
+      given_record = record
+      given_record ||= klass.find_by(id: record_id)
+      given_record ||= klass.new(id: record_id)
+      logs = if step
+        where(
+          record: record,
+        ).order(:updated_at => :desc).limit(step)
       else
-        data = record.logging_data
+        where(
+          record: record,
+          updated_at: timepoint..(DateTime::Infinity.new)
+        ).order(:updated_at => :desc)
       end
-      create(
-        owner: record,
-        data: data,
-        user_id: user_id,
-        action: action,
-      )
-    end
-  end
-
-  def self.rollback(owner:, owner_type:, owner_id:, timepoint:, step:)
-    klass       = owner_type.constantize
-    given_owner = owner
-    given_owner ||= klass.find_by(id: owner_id)
-    given_owner ||= klass.new(id: owner_id)
-    logs = if step
-      where(
-        owner: owner,
-      ).order(:updated_at => :desc).limit(step)
-    else
-      where(
-        owner: owner,
-        updated_at: timepoint..(DateTime::Infinity.new)
-      ).order(:updated_at => :desc)
-    end
-    if timepoint && (timepoint < where(owner: owner).minimum(:updated_at))
-      return klass.new(id: owner_id)
-    else
-      logs.each do |log|
-        (log.data||{}).each do |key, arr|
-          given_owner.send("#{key}=", arr[0])
+      if timepoint && (timepoint < where(record: record).minimum(:updated_at))
+        return klass.new(id: record_id)
+      else
+        logs.each do |log|
+          (log.data||{}).each do |key, arr|
+            given_record.send("#{key}=", arr[0])
+          end
         end
+        given_record
       end
-      given_owner
     end
-  end
 
-  def self.rollback!(**kwargs)
-    rollback(**kwargs).save
+    def rollback!(**kwargs)
+      rollback(**kwargs).save
+    end
   end
 end
