@@ -1,6 +1,8 @@
 require "application_record_logger/engine"
 require "application_record_logger/version"
+require "application_record_logger/service"
 require "application_record_logger/log_service"
+require "application_record_logger/rollback_service"
 
 module ApplicationRecordLogger
   @@config = {
@@ -82,7 +84,7 @@ module ApplicationRecordLogger
     end
   end
 
-  def create_application_record_log(action:, user:, config: nil)
+  def create_application_record_log(action:, user: nil, config: nil)
     res = ApplicationRecordLogger::LogService.call(
       record: self,
       user:   user,
