@@ -23,38 +23,46 @@ class ApplicationRecordLog < ApplicationRecord
     :db_create  => 0,
     :db_update  => 1,
     :db_destroy => 2,
+    :rollback   => 3,
   }
 
   class << self
-    def rollback(record:, record_type:, record_id:, timepoint:, step:)
-      klass       = record_type.constantize
-      given_record = record
-      given_record ||= klass.find_by(id: record_id)
-      given_record ||= klass.new(id: record_id)
+    def log(**kwargs, &block)
+      ApplicationRecordLogger::LogService.call(**kwargs, &block)
+    end
+
+    # Hadle rollback sets action db_rollback,
+    def rollback(record: nil, record_type: nil, record_id: nil, timepoint: nil, step: nil)
+      given_record   = record
+      raise ArgumentError.new("No record or record_type given") unless record || record_type
+      klass = record ? record.class : record_type.constantize
+      given_record ||= klass.find_by(id: record_id) if record_id
+      given_record ||= klass.new(id: record_id) if record_id
+      raise ArgumentError.new("No record or (record_id and record_type) given!") unless given_record
+      raise ArgumentError.new("No timepoint or stepe given") unless timepoint || step
       logs = if step
-        where(
-          record: record,
-        ).order(:updated_at => :desc).limit(step)
+        ApplicationRecordLog.where(
+          record: given_record,
+        ).order(:created_at => :desc).limit(step)
       else
         where(
-          record: record,
-          updated_at: timepoint..(DateTime::Infinity.new)
-        ).order(:updated_at => :desc)
+          record: given_record
+        ).where(
+          "created_at > ?", timepoint
+        ).order(:created_at => :desc)
       end
-      if timepoint && (timepoint < where(record: record).minimum(:updated_at))
-        return klass.new(id: record_id)
-      else
-        logs.each do |log|
-          (log.data||{}).each do |key, arr|
-            given_record.send("#{key}=", arr[0])
-          end
+      logs.each do |log|
+        hash = log.data || klass.logging_options[:log_fields].map{|key| [key,[nil]]}.to_h
+        hash.each do |key, arr|
+          given_record.send("#{key}=", arr[0])
         end
-        given_record
       end
+      given_record
     end
 
     def rollback!(**kwargs)
-      rollback(**kwargs).save
+      rec = rollback(**kwargs)
+      return [rec, rec.save]
     end
   end
 end
