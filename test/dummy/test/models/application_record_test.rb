@@ -6,6 +6,7 @@ class ApplicationRecordTest < ActiveSupport::TestCase
       :configure_logging_options,
       :default_log_fields,
       :logging_options,
+      :set_logging_callbacks!,
     ]
     @log_create = "PLEASE DO!"
     ApplicationRecord.configure_logging_options do |opts|

@@ -11,7 +11,8 @@ module ApplicationRecordLogger
     log_user_activity_only: true,
     log_fields: [],
     log_field_types: %i(string date integer decimal float datetime),
-    log_exclude_field_names: %i(id updated_at created_at)
+    log_exclude_field_names: %i(id updated_at created_at),
+    with_callbacks: true,
   }
 
   def self.config
@@ -22,19 +23,8 @@ module ApplicationRecordLogger
     base.extend ClassMethods
     base.class_eval do
       has_many :application_record_logs, as: :record
-
-      after_create do
-        create_application_record_log(:db_create)
-      end
-
-      after_update do
-        create_application_record_log(:db_update)
-      end
-
-      after_destroy do
-        create_application_record_log(:db_destroy)
-      end
     end
+    base.set_logging_callbacks! if base.logging_options[:with_callbacks]
   end
 
   module ClassMethods
@@ -63,6 +53,24 @@ module ApplicationRecordLogger
       set_logging_options(&block)
     end
 
+    def set_logging_callbacks!
+      class_eval do
+        after_create do
+          create_application_record_log(action: :db_create, user: current_user)
+        end
+
+        after_update do
+          create_application_record_log(action: :db_update, user: current_user)
+        end
+
+        after_destroy do
+          create_application_record_log(action: :db_destroy, user: current_user)
+        end
+
+        attr_accessor :current_user
+      end
+    end
+
     private
     def set_logging_options(&block)
       @logging_options = ApplicationRecordLogger.config.dup
@@ -74,14 +82,12 @@ module ApplicationRecordLogger
     end
   end
 
-  attr_accessor :current_user
-  private
-  def create_application_record_log(action)
+  def create_application_record_log(action:, user:, config: nil)
     res = ApplicationRecordLogger::LogService.call(
       record: self,
-      user: current_user,
+      user:   user,
       action: action,
-      # config: self.class.logging_options # implicit!
+      config: config
     )
     if res && application_record_logs.loaded
       application_record_logs << res
