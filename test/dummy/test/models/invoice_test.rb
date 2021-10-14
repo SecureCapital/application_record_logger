@@ -68,6 +68,10 @@ class InvoiceTest < ActiveSupport::TestCase
     assert_respond_to @invoice, :current_user=
   end
 
+  # Tests below referes to log creation on update, destroy, and create.
+  # These are produced by LogService, thus below tests hould be moved to
+  # log_service_test, and test on invoice should just confirm wheter or not
+  # a log has been created.
   test "creating without user does not create log" do
     invoice = Invoice.create(**@new_invoice)
     assert_equal invoice.application_record_logs.size, 0

@@ -13,8 +13,7 @@ module ApplicationRecordLogger
     log_user_activity_only: true,
     log_fields: [],
     log_field_types: %i(string date integer decimal float datetime),
-    log_exclude_field_names: %i(id updated_at created_at),
-    with_callbacks: true,
+    log_exclude_field_names: %w(id updated_at created_at),
   }
 
   def self.config
@@ -26,7 +25,6 @@ module ApplicationRecordLogger
     base.class_eval do
       has_many :application_record_logs, as: :record
     end
-    base.set_logging_callbacks! if base.logging_options[:with_callbacks]
   end
 
   module ClassMethods
@@ -42,7 +40,7 @@ module ApplicationRecordLogger
         end.select do |key,type|
           (field_types == [:any])||field_types.include?(type.to_sym)
         end.reject do |key, type|
-          exclude_names.include?(key.to_sym)
+          exclude_names.include?(key)
         end.map(&:first)
       end
     end
@@ -57,16 +55,22 @@ module ApplicationRecordLogger
 
     def set_logging_callbacks!
       class_eval do
-        after_create do
-          create_application_record_log(action: :db_create, user: current_user)
+        if logging_options[:log_create]
+          after_create do
+            create_application_record_log(action: :db_create, user: current_user)
+          end
         end
 
-        after_update do
-          create_application_record_log(action: :db_update, user: current_user)
+        if logging_options[:log_update]
+          after_update do
+            create_application_record_log(action: :db_update, user: current_user)
+          end
         end
 
-        after_destroy do
-          create_application_record_log(action: :db_destroy, user: current_user)
+        if logging_options[:log_destroy]
+          after_destroy do
+            create_application_record_log(action: :db_destroy, user: current_user)
+          end
         end
 
         attr_accessor :current_user

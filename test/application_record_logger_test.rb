@@ -15,6 +15,6 @@ class ApplicationRecordLoggerTest < ActiveSupport::TestCase
     assert_equal ApplicationRecordLogger.config[:log_user_activity_only], true
     assert_equal ApplicationRecordLogger.config[:log_fields], []
     assert_equal ApplicationRecordLogger.config[:log_field_types], %i(string date integer decimal float datetime)
-    assert_equal ApplicationRecordLogger.config[:log_exclude_field_names], %i(id updated_at created_at)
+    assert_equal ApplicationRecordLogger.config[:log_exclude_field_names], %w(id updated_at created_at)
   end
 end

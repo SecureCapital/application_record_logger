@@ -41,6 +41,8 @@ class UserTest < ActiveSupport::TestCase
     assert_equal User.logging_options[:log_fields], ["name", "email"]
   end
 
+  # Tests below referes to log rollback and should be tested in
+  # rollback_service_test, thus below tests hould be moved. 
   test "five user logs exists on @user" do
     assert_equal @user.application_record_logs.size, 5
   end
