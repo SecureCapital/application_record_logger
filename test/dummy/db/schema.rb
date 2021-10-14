@@ -10,19 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_09_10_144443) do
+ActiveRecord::Schema.define(version: 2021_10_13_115559) do
 
   create_table "application_record_logs", force: :cascade do |t|
-    t.string "owner_type", null: false
-    t.integer "owner_id", null: false
+    t.string "record_type", null: false
+    t.integer "record_id", null: false
     t.integer "user_id"
     t.integer "action", null: false
     t.text "data"
-    t.string "message", limit: 1225
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.index ["owner_id"], name: "index_application_record_logs_on_owner_id"
-    t.index ["owner_type"], name: "index_application_record_logs_on_owner_type"
+    t.index ["record_id"], name: "index_application_record_logs_on_record_id"
+    t.index ["record_type"], name: "index_application_record_logs_on_record_type"
     t.index ["user_id"], name: "index_application_record_logs_on_user_id"
   end
 
