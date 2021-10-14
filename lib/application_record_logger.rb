@@ -45,6 +45,7 @@ module ApplicationRecordLogger
       end
     end
 
+    # A list of methods that will be added to the base class
     def logging_options
       @logging_options ||= set_logging_options
     end
@@ -60,6 +61,7 @@ module ApplicationRecordLogger
             create_application_record_log(action: :db_create, user: current_user)
           end
         end
+
 
         if logging_options[:log_update]
           after_update do
