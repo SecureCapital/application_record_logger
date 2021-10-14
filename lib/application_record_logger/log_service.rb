@@ -25,7 +25,7 @@ module ApplicationRecordLogger
       new(**kwargs, &block).call
     end
 
-    def initialize(record:, user:, action:, config: nil)
+    def initialize(record:, user: nil, action:, config: nil)
       @record = record
       @user = user
       @action = action
@@ -49,7 +49,7 @@ module ApplicationRecordLogger
       if @record && @action && user_requierd_and_user_given?
         case @action
         when :db_create
-          @config[:log_create]
+          @config[:log_create] && (log_create_data||user_id)
         when :db_update
           @config[:log_update] && log_update_data.any?
         when :db_destroy
