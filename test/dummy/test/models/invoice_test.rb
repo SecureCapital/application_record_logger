@@ -91,20 +91,27 @@ class InvoiceTest < ActiveSupport::TestCase
   test "configure log_user_activity_only=false and create do create a log" do
     Invoice.configure_logging_options do |opts|
       opts[:log_user_activity_only] = false
+      opts[:log_create_data] = true
     end
     invoice = Invoice.create(**@new_invoice)
     assert_equal invoice.application_record_logs.size, 1
     assert_equal ::ApplicationRecordLog.where(record: invoice).count, 1
     log = invoice.application_record_logs.first
+    expected_data = {
+      "title"=>[nil, invoice.title],
+      "price"=>[nil, invoice.price],
+      "date"=>[nil, invoice.date]
+    }
     assert_equal log.record_type, 'Invoice'
     assert_equal log.record_id, invoice.id
     assert_equal log.user_id, nil
     assert_equal log.action, 'db_create'
-    assert_equal log.data, nil
+    assert_equal log.data, expected_data
     assert log.created_at >= invoice.created_at
 
     Invoice.configure_logging_options do |opts|
       opts[:log_user_activity_only] = true
+      opts[:log_create_data] = false
     end
   end
 
