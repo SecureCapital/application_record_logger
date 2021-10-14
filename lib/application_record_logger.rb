@@ -45,7 +45,6 @@ module ApplicationRecordLogger
       end
     end
 
-    # A list of methods that will be added to the base class
     def logging_options
       @logging_options ||= set_logging_options
     end
