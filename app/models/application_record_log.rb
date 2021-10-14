@@ -31,38 +31,12 @@ class ApplicationRecordLog < ApplicationRecord
       ApplicationRecordLogger::LogService.call(**kwargs, &block)
     end
 
-    # Hadle rollback sets action db_rollback,
-    def rollback(record: nil, record_type: nil, record_id: nil, timepoint: nil, step: nil)
-      given_record   = record
-      raise ArgumentError.new("No record or record_type given") unless record || record_type
-      klass = record ? record.class : record_type.constantize
-      given_record ||= klass.find_by(id: record_id) if record_id
-      given_record ||= klass.new(id: record_id) if record_id
-      raise ArgumentError.new("No record or (record_id and record_type) given!") unless given_record
-      raise ArgumentError.new("No timepoint or stepe given") unless timepoint || step
-      logs = if step
-        ApplicationRecordLog.where(
-          record: given_record,
-        ).order(:created_at => :desc).limit(step)
-      else
-        where(
-          record: given_record
-        ).where(
-          "created_at > ?", timepoint
-        ).order(:created_at => :desc)
-      end
-      logs.each do |log|
-        hash = log.data || klass.logging_options[:log_fields].map{|key| [key,[nil]]}.to_h
-        hash.each do |key, arr|
-          given_record.send("#{key}=", arr[0])
-        end
-      end
-      given_record
+    def rollback(**kwargs, &block)
+      ApplicationRecordLogger::RollbackService.call(**kwargs, &block)
     end
 
     def rollback!(**kwargs)
-      rec = rollback(**kwargs)
-      return [rec, rec.save]
+      ApplicationRecordLogger::RollbackService.call!(**kwargs, &block)
     end
   end
 end

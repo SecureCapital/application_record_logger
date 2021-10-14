@@ -17,23 +17,18 @@
 #  action: %i(db_create db_update db_destroy)
 #  config: Hash of logging_options
 
+require "application_record_logger/service"
+
 module ApplicationRecordLogger
-  class LogService
-    attr_accessor :record, :user, :action, :config
-
-    def self.call(**kwargs, &block)
-      new(**kwargs, &block).call
-    end
-
-    def initialize(record:, user: nil, action:, config: nil)
+  class LogService < Service
+    def initialize(record:, action:, **kwargs)
       @record = record
-      @user = user
       @action = action
-      if @record && !config
-        @config = @record.class.logging_options
-      else
-        @config = config
+      kwargs.each do |key, value|
+        instance_variable_set("@#{key}", value)
       end
+      @user = user
+      @config = config
       yield self if block_given?
     end
 
@@ -46,14 +41,14 @@ module ApplicationRecordLogger
     end
 
     def produce_log?
-      if @record && @action && user_requierd_and_user_given?
-        case @action
+      if record && action && user_requierd_and_user_given?
+        case action
         when :db_create
-          @config[:log_create] && (log_create_data||user_id)
+          config[:log_create] && (log_create_data||user_id)
         when :db_update
-          @config[:log_update] && log_update_data.any?
+          config[:log_update] && log_update_data.any?
         when :db_destroy
-          @config[:log_destroy]
+          config[:log_destroy]
         else
           false
         end
@@ -64,9 +59,9 @@ module ApplicationRecordLogger
 
     def data
       {
-        record: @record,
+        record: record,
         user_id: user_id,
-        action: @action,
+        action: action,
         data: log_data,
       }
     end
@@ -79,7 +74,7 @@ module ApplicationRecordLogger
       # if db_create_record_exists? we are creating second time, meaning a
       # destruction has been made, thus we desire to post the new inital
       # values
-      if @config[:log_create_data] || db_create_record_exists?
+      if config[:log_create_data] || db_create_record_exists?
         log_update_data
       else
         nil
@@ -87,25 +82,21 @@ module ApplicationRecordLogger
     end
 
     def db_create_record_exists?
-      ::ApplicationRecordLog.where(record: @record, action: :db_create).any?
+      logs.where(action: :db_create).any?
     end
 
     def log_update_data
-      @record.saved_changes.slice(*@config[:log_fields])
+      record.saved_changes.slice(*config[:log_fields])
     end
 
     def log_destroy_data
-      @record.attributes.map do |key, value|
+      record.attributes.map do |key, value|
         [key, [value, nil]]
-      end.to_h.slice(*@config[:log_fields])
-    end
-
-    def user_id
-      @user.respond_to?(:id) ? @user.id : @user if @user
+      end.to_h.slice(*config[:log_fields])
     end
 
     def user_requierd_and_user_given?
-      if @config[:log_user_activity_only]
+      if config[:log_user_activity_only]
         !!user_id
       else
         true
