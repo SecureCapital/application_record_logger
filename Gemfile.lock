@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    application_record_logger (0.1.2)
+    application_record_logger (0.1.3)
       rails (~> 6.1.3, >= 6.1.3.2)
 
 GEM
