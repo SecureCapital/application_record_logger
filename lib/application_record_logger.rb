@@ -12,7 +12,7 @@ module ApplicationRecordLogger
     log_create_data: false,
     log_user_activity_only: true,
     log_fields: [],
-    log_field_types: %i(string date integer decimal float datetime),
+    log_field_types: %i(string date integer decimal float datetime time boolean),
     log_exclude_field_names: %w(id updated_at created_at),
   }
 
