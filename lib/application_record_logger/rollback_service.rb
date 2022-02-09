@@ -89,7 +89,7 @@ module ApplicationRecordLogger
     end
 
     def action
-      @actions ||= 'rollback'
+      @action ||= 'rollback'
     end
 
     def nil_data

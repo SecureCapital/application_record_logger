@@ -61,7 +61,6 @@ module ApplicationRecordLogger
           end
         end
 
-
         if logging_options[:log_update]
           after_update do
             create_application_record_log(action: :db_update, user: current_user)
