@@ -17,7 +17,7 @@ class ApplicationRecordLog < ApplicationRecord
     false
   end
 
-  belongs_to :record, polymorphic: true
+  belongs_to :record, polymorphic: true, optional: true
   belongs_to :user, optional: true
   serialize :data
   enum :action => {
@@ -36,6 +36,7 @@ class ApplicationRecordLog < ApplicationRecord
     when /create/i  then 'db_create'
     when /update/i  then 'db_update'
     when /destroy/i then 'db_destroy'
+    when /delete/i then 'db_destroy'
     when /rollback/i then 'rollback'
     else
       value
