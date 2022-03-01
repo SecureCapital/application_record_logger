@@ -18,8 +18,6 @@ class ApplicationRecordLog < ApplicationRecord
   end
 
   belongs_to :record, polymorphic: true
-  validates :record_id, allow_blank: false
-  validates :record_type, allow_blank: false
   belongs_to :user, optional: true
   serialize :data
   enum :action => {
