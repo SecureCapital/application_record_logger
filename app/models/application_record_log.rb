@@ -17,7 +17,9 @@ class ApplicationRecordLog < ApplicationRecord
     false
   end
 
-  belongs_to :record, polymorphic: true, optional: false
+  belongs_to :record, polymorphic: true
+  validates :record_id, allow_blank: false
+  validates :record_type, allow_blank: false
   belongs_to :user, optional: true
   serialize :data
   enum :action => {
@@ -26,6 +28,21 @@ class ApplicationRecordLog < ApplicationRecord
     :db_destroy => 2,
     :rollback   => 3,
   }
+
+  validates :record_id, presence: true
+  validates :record_type, presence: true
+  validates :action, inclusion: {in: actions.keys}
+
+  def action=(value)
+    super case value
+    when /create/i  then 'db_create'
+    when /update/i  then 'db_update'
+    when /destroy/i then 'db_destroy'
+    when /rollback/i then 'rollback'
+    else
+      value
+    end
+  end
 
   class << self
     def log(**kwargs, &block)

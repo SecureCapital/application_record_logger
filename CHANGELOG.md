@@ -14,3 +14,7 @@
 - current_user is not defined by default on including model but along explicit callback setting
 - add tests for log creation, update and destruction as well as callback and configuration
 - updated readme
+## [0.1.5] - 2022-03-01
+- On applicationRecordLog eemoved options "optional: false" on belongs_to. Destroyed records would then not be valid records, thus no destruction log would be produced
+- Added validation of presence of record_id and record_type on ApplicationRecordLog
+- Added setter of action on ApplicationRecordLog allowing setting action with symbols and strings matching the action rather than being the exact action.
