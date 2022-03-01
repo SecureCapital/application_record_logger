@@ -5,7 +5,7 @@ require "application_record_logger/log_service"
 require "application_record_logger/rollback_service"
 
 module ApplicationRecordLogger
-  @@config = {
+  CONFIG = {
     log_create: true,
     log_update: true,
     log_destroy: true,
@@ -17,7 +17,7 @@ module ApplicationRecordLogger
   }
 
   def self.config
-    @@config
+    CONFIG
   end
 
   def self.included(base)
