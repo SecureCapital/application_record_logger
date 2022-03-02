@@ -1,5 +1,6 @@
 require "application_record_logger/engine"
 require "application_record_logger/version"
+require "application_record_logger/action_parser"
 require "application_record_logger/service"
 require "application_record_logger/log_service"
 require "application_record_logger/rollback_service"

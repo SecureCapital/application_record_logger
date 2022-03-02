@@ -1,4 +1,5 @@
 class ApplicationRecordLog < ApplicationRecord
+  include ApplicationRecordLogger::ActionParser
   # self.table_name = 'application_record_logs'
   # Skip callbacks on application_record_log itself - we will not add a log to a log
   skip_callback :after_create
@@ -29,18 +30,10 @@ class ApplicationRecordLog < ApplicationRecord
 
   validates :record_id, presence: true
   validates :record_type, presence: true
-  validates :action, inclusion: {in: actions.keys}
+  validates :action, presence: true
 
   def action=(value)
-    super case value
-    when /create/i  then 'db_create'
-    when /update/i  then 'db_update'
-    when /destroy/i then 'db_destroy'
-    when /delete/i then 'db_destroy'
-    when /rollback/i then 'rollback'
-    else
-      value
-    end
+    super parse_action(value)
   end
 
   class << self
