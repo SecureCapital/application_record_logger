@@ -1,11 +1,11 @@
 class ApplicationRecordLog < ApplicationRecord
+  include ApplicationRecordLogger::ActionParser
   # self.table_name = 'application_record_logs'
   # Skip callbacks on application_record_log itself - we will not add a log to a log
   skip_callback :after_create
   skip_callback :after_update
   skip_callback :after_destroy
 
-  # Same as above
   def self.log_create
     false
   end
@@ -18,7 +18,7 @@ class ApplicationRecordLog < ApplicationRecord
     false
   end
 
-  belongs_to :record, polymorphic: true, optional: false
+  belongs_to :record, polymorphic: true, optional: true
   belongs_to :user, optional: true
   serialize :data
   enum :action => {
@@ -28,12 +28,18 @@ class ApplicationRecordLog < ApplicationRecord
     :rollback   => 3,
   }
 
+  validates :record_id, presence: true
+  validates :record_type, presence: true
+  validates :action, presence: true
+
+  def action=(value)
+    super parse_action(value)
+  end
 
   class << self
     def log(**kwargs, &block)
       ApplicationRecordLogger::LogService.call(**kwargs, &block)
     end
-
 
     def rollback(**kwargs, &block)
       ApplicationRecordLogger::RollbackService.call(**kwargs, &block)

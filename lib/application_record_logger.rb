@@ -1,11 +1,12 @@
 require "application_record_logger/engine"
 require "application_record_logger/version"
+require "application_record_logger/action_parser"
 require "application_record_logger/service"
 require "application_record_logger/log_service"
 require "application_record_logger/rollback_service"
 
 module ApplicationRecordLogger
-  @@config = {
+  CONFIG = {
     log_create: true,
     log_update: true,
     log_destroy: true,
@@ -17,7 +18,7 @@ module ApplicationRecordLogger
   }
 
   def self.config
-    @@config
+    CONFIG
   end
 
   def self.included(base)
@@ -60,7 +61,6 @@ module ApplicationRecordLogger
             create_application_record_log(action: :db_create, user: current_user)
           end
         end
-
 
         if logging_options[:log_update]
           after_update do
