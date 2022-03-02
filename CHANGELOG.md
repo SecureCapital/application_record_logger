@@ -18,3 +18,16 @@
 - On applicationRecordLog eemoved options "optional: false" on belongs_to. Destroyed records would then not be valid records, thus no destruction log would be produced
 - Added validation of presence of record_id and record_type on ApplicationRecordLog
 - Added setter of action on ApplicationRecordLog allowing setting action with symbols and strings matching the action rather than being the exact action.
+- Improved Service accessors
+- Refactored initialization on Service, LogService, and RollBackService
+- Added ActionParser mixin
+- Added test of Service
+- Added test of LogService with create
+- Added test of LogService with update
+- Added test of LogService with destroy
+- Removed reliance of database seeding before testing
+- Removed inclusion of module on ApplicationRecord, and associated tests
+- Removed set_logging_callbacks! on Invoice (test)
+- Removed logging-tests on invoce as these are covered in LogService test
+- Changed logging configuration for model User (test)
+- Increased test coverage on module and ApplicationRecordLog

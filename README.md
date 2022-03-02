@@ -192,6 +192,25 @@ end
 
 The above can easily be generalized across all the controllers, and should be preferred when only actions through the controllers should be logged, or actions associated with a user. The downside of the solution is the case where direct system changes are rolled out that modifying data and is not logged, thus removing the ability to track the real state of data.
 
+## Testing
+
+In order to test a database for the dummy application must be created. Go to `/test/dummy` and run:
+
+```bash
+# /test/dummy
+$ rails db:drop RAILS_ENV=test
+$ rails db:create RAILS_ENV=test
+$ rails db:migrate RAILS_ENV=test
+$ rails db:seed RAILS_ENV=test
+```
+
+Seeding is optional. Now at in the root folder `/application_record_logger` run:
+
+```bash
+# /
+rake test
+```
+
 ## TODO
 - Move test of rollback methods out of user
 - Move test of logging out of Invoice

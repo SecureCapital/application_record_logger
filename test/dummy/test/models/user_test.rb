@@ -2,11 +2,6 @@ require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
   setup do
-    User.configure_logging_options do |opts|
-      opts[:log_create_data] = true
-      opts[:log_user_activity_only] = false
-    end
-
     # Initial user
     base_user = {
       name:  "Name 0",
@@ -33,8 +28,9 @@ class UserTest < ActiveSupport::TestCase
     end
   end
 
-  def log_count
-    ApplicationRecordLog.where(record_id: @record_id, record_type: @record_type).count
+  def log_count(**args)
+    args = {record_id: @record_id, record_type: @record_type}.merge(args)
+    ApplicationRecordLog.where(args).count
   end
 
   test "has defualt logging_fields" do
@@ -42,9 +38,17 @@ class UserTest < ActiveSupport::TestCase
   end
 
   # Tests below referes to log rollback and should be tested in
-  # rollback_service_test, thus below tests hould be moved. 
+  # rollback_service_test, thus below tests hould be moved.
   test "five user logs exists on @user" do
     assert_equal @user.application_record_logs.size, 5
+  end
+
+  test "1 create log exists" do
+    assert_equal log_count(action: 'db_create'), 1
+  end
+
+  test "4 update logs exists" do
+    assert_equal log_count(action: 'db_update'), 4
   end
 
   test "logging data has been composed" do
