@@ -1,27 +1,19 @@
-require "application_record_logger/service"
+require_relative "service"
 
 module ApplicationRecordLogger
   class RollbackService < Service
     attr_accessor :step, :timepoint
 
-    def initialize(**kwargs)
-      unless kwargs[:record] || (kwargs[:record_id]&&kwargs[:record_type])
+    def initialize(**kwargs, &block)
+      super(**kwargs,&block)
+      unless (@record_type&&@record_id)||(record)
         raise ArgumentError.new("Missing argument record, or record_id and record_type")
       end
-      unless kwargs[:timepoint] || kwargs[:step]
-        raise ArgumentError.new("Missing argument step or timepoint") unless kwargs[:timepoint] || kwargs[:step]
+      unless @timepoint || @step
+        raise ArgumentError.new("Missing argument step or timepoint")
       end
-      kwargs.each do |key, value|
-        instance_variable_set("@#{key}", value)
-      end
-      unless @record
-        @record   = record_klass.find_by(id: @record_id)
-        @record ||= record_klass.new(id: @record_id)
-      end
-      if user && @record.respond_to?(:current_user)
-        @record.current_user = user
-      end
-      yield self if block_given?
+      @record = record_klass.new(id: record_id) unless record
+      @record.current_user = user if user && @record.respond_to?(:current_user)
     end
 
     def call
