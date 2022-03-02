@@ -17,19 +17,18 @@
 #  action: %i(db_create db_update db_destroy)
 #  config: Hash of logging_options
 
-require "application_record_logger/service"
+require_relative "service"
 
 module ApplicationRecordLogger
   class LogService < Service
-    def initialize(record:, action:, **kwargs)
-      @record = record
-      @action = action
-      kwargs.each do |key, value|
-        instance_variable_set("@#{key}", value)
+    def initialize(**kwargs, &block)
+      super(**kwargs, &block)
+      unless record
+        raise ArgumentError.new("Missing argument record, or record_id and record_type")
       end
-      @user = user
-      @config = config
-      yield self if block_given?
+      unless action
+        raise ArgumentError.new("Missing argument action")
+      end
     end
 
     def call
@@ -48,7 +47,7 @@ module ApplicationRecordLogger
         when :db_update
           config[:log_update] && log_update_data.any?
         when :db_destroy
-          config[:log_destroy]
+          config[:log_destroy] && record.destroyed?
         else
           false
         end
