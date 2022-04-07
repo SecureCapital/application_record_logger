@@ -99,5 +99,6 @@ module ApplicationRecordLogger
     if res && application_record_logs.loaded
       application_record_logs << res
     end
+    res
   end
 end
