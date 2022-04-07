@@ -11,7 +11,7 @@ class ApplicationRecordLoggerTest < ActiveSupport::TestCase
       log_create_data: false,
       log_user_activity_only: true,
       log_fields: [],
-      log_field_types: %i(string date integer decimal float datetime),
+      log_field_types: %i(string date integer decimal float datetime time boolean),
     }
   end
 

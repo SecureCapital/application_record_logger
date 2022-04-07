@@ -1,10 +1,15 @@
-require "application_record_logger/engine"
-require "application_record_logger/version"
-require "application_record_logger/action_parser"
-require "application_record_logger/service"
-require "application_record_logger/log_service"
-require "application_record_logger/rollback_service"
+# frozen_string_literal: true
 
+require 'application_record_logger/engine'
+require 'application_record_logger/version'
+require 'application_record_logger/action_parser'
+require 'application_record_logger/service'
+require 'application_record_logger/log_service'
+require 'application_record_logger/rollback_service'
+
+##
+# To be included on Rails' ApplicationRecord for logging chagnes on the record
+# in associated model ApplicationRecord.
 module ApplicationRecordLogger
   CONFIG = {
     log_create: true,
@@ -14,8 +19,8 @@ module ApplicationRecordLogger
     log_user_activity_only: true,
     log_fields: [],
     log_field_types: %i(string date integer decimal float datetime time boolean),
-    log_exclude_field_names: %w(id updated_at created_at),
-  }
+    log_exclude_field_names: %w[id updated_at created_at]
+  }.freeze
 
   def self.config
     CONFIG
@@ -28,6 +33,8 @@ module ApplicationRecordLogger
     end
   end
 
+  ##
+  # Logging configuration of model
   module ClassMethods
     def default_log_fields
       if table_name.blank?
@@ -36,11 +43,11 @@ module ApplicationRecordLogger
         field_types = logging_options[:log_field_types]
         exclude_names = logging_options[:log_exclude_field_names]
 
-        columns_hash.map do |key,rec|
+        columns_hash.map do |key, rec|
           [key, rec.type]
-        end.select do |key,type|
-          (field_types == [:any])||field_types.include?(type.to_sym)
-        end.reject do |key, type|
+        end.select do |_key, type|
+          (field_types == [:any]) || field_types.include?(type.to_sym)
+        end.reject do |key, _type|
           exclude_names.include?(key)
         end.map(&:first)
       end
@@ -79,12 +86,11 @@ module ApplicationRecordLogger
     end
 
     private
-    def set_logging_options(&block)
+
+    def set_logging_options
       @logging_options = ApplicationRecordLogger.config.dup
       yield @logging_options if block_given?
-      if @logging_options[:log_fields].empty?
-        @logging_options[:log_fields] = default_log_fields
-      end
+      @logging_options[:log_fields] = default_log_fields if @logging_options[:log_fields].empty?
       @logging_options
     end
   end
@@ -92,13 +98,11 @@ module ApplicationRecordLogger
   def create_application_record_log(action:, user: nil, config: nil)
     res = ApplicationRecordLogger::LogService.call(
       record: self,
-      user:   user,
+      user: user,
       action: action,
       config: config
     )
-    if res && application_record_logs.loaded
-      application_record_logs << res
-    end
+    application_record_logs << res if res && application_record_logs.loaded
     res
   end
 end
